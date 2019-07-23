@@ -53,7 +53,7 @@ trait UserResponseGenerator extends ResponseGeneratorInstances[IO] {
     case Left(Error.Active) => Locked("Active")
     case Left(Error.Deleted) => Gone("Deleted")
     case Left(Error.Blocked) => Forbidden("Blocked")
-    case Left(Error.System(t)) => InternalServerError(t.getStackTrace.mkString("\n"))
+    case Left(Error.System(t)) => InternalServerError(t.toString)
     case Right(a) => Ok(a.asJson)
   }
 
