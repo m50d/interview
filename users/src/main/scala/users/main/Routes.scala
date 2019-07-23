@@ -28,6 +28,8 @@ import _root_.io.circe.Json
 import users.domain.UserName
 import users.domain.EmailAddress
 import users.domain.Password
+import org.http4s.rho.bits.ResponseGeneratorInstances
+import _root_.io.circe.Encoder
 
 object Routes {
   val reader: Reader[Services, Routes] =
@@ -42,6 +44,18 @@ case class SignupRequest(
   emailAddress: EmailAddress,
   password: Option[Password])
 
+trait UserResponseGenerator extends ResponseGeneratorInstances[IO] {
+  def toResponse[A: Encoder](er: Either[Error, A]) = er match {
+    case Left(Error.Exists) => Conflict("Exists")
+    case Left(Error.NotFound) => NotFound("Not found")
+    case Left(Error.Active) => Locked("Active")
+    case Left(Error.Deleted) => Gone("Deleted")
+    case Left(Error.Blocked) => Forbidden("Blocked")
+    case Left(Error.System(t)) => InternalServerError(t.getStackTrace.mkString("\n"))
+    case Right(a) => Ok(a.asJson)
+  }
+}
+
 case class Routes(services: Services) {
   implicit def idEncoder[F[_]](implicit charset: Charset = DefaultCharset): EntityEncoder[F, User.Id] = {
     val hdr = `Content-Type`(MediaType.text.plain).withCharset(charset)
@@ -54,23 +68,15 @@ case class Routes(services: Services) {
 
   def f[A](fa: => Future[A]): IO[A] = IO.fromFuture(IO(fa))
 
-  final val rhoRoutes = new RhoRoutes[IO] {
+  final val rhoRoutes = new RhoRoutes[IO] with UserResponseGenerator {
     GET / "generateId" |>>
       { f(services.userManagement.generateId()) map { Ok(_) } }
     GET / "get" / pathVar[User.Id] |>> { id: User.Id =>
-      f(services.userManagement.get(id)) map {
-        case Left(Error.Exists) => Conflict("Exists")
-        case Left(Error.NotFound) => NotFound("Not found")
-        case Left(Error.Active) => Locked("Active")
-        case Left(Error.Deleted) => Gone("Deleted")
-        case Left(Error.Blocked) => Forbidden("Blocked")
-        case Left(Error.System(t)) => InternalServerError(t.getStackTrace.mkString("\n"))
-        case Right(u) => Ok(u.asJson)
-      }
+      f(services.userManagement.get(id)) map { toResponse(_) }
     }
     POST / "signUp" ^ jsonOf[IO, SignupRequest] |>> {
       body: SignupRequest =>
-        f(services.userManagement.signUp(body.userName, body.emailAddress, body.password)) map { _ => Ok(()) }
+        f(services.userManagement.signUp(body.userName, body.emailAddress, body.password)) map { toResponse(_) }
     }
     GET |>> Ok("Hello world")
   }
