@@ -4,7 +4,8 @@ import cats.data._
 
 case class ApplicationConfig(
     executors: ExecutorsConfig,
-    services: ServicesConfig
+    services: ServicesConfig,
+    server: ServerConfig
 )
 
 case class ExecutorsConfig(
@@ -32,4 +33,11 @@ object ServicesConfig {
       failureProbability: Double,
       timeoutProbability: Double
   )
+}
+
+
+case class ServerConfig(port: Int)
+object ServerConfig {
+  val fromApplicationConfig: Reader[ApplicationConfig, ServerConfig] =
+    Reader(_.server)
 }

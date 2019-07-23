@@ -8,16 +8,15 @@ import cats.Monad
 import cats.effect.IO
 import org.http4s.rho.swagger.syntax.io
 
-object Application {
-  val reader: Reader[Services, Application] =
-    Reader(Application.apply)
+object Routes {
+  val reader: Reader[Services, Routes] =
+    Reader(Routes.apply)
 
-  val fromApplicationConfig: Reader[ApplicationConfig, Application] =
+  val fromApplicationConfig: Reader[ApplicationConfig, Routes] =
     Services.fromApplicationConfig andThen reader
 }
 
-case class Application(
-  services: Services) {
+case class Routes(services: Services) {
   final val rhoRoutes = new RhoRoutes[IO] {
     GET |>> Ok("Hello world")
   }

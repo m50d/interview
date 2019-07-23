@@ -8,28 +8,25 @@ import users.main._
 import cats.effect.IOApp
 
 import org.http4s.server.blaze.BlazeServerBuilder
-import org.http4s.syntax.all._
 import cats.effect.IO
 import cats.effect.ExitCode
 import org.apache.log4j.BasicConfigurator
+import users.main.Server
 
 object Main extends IOApp {
 
-  override def run(args: List[String]): IO[ExitCode] = {
-    val config = ApplicationConfig(
-      executors = ExecutorsConfig(
-        services = ExecutorsConfig.ServicesConfig(
-          parallellism = 4)),
-      services = ServicesConfig(
-        users = ServicesConfig.UsersConfig(
-          failureProbability = 0.1,
-          timeoutProbability = 0.1)))
+  override def main(args: Array[String]) = {
+    // Log4j basic config is JVM-global (static); there is no way to encapsulate it in a resuable IO.
+    BasicConfigurator.configure()
+    super.main(args)
+  }
 
-    val application = Application.fromApplicationConfig.run(config)
-    
-    IO(BasicConfigurator.configure()) *>    
-    BlazeServerBuilder[IO].withHttpApp(application.routes.orNotFound)
-      .bindLocal(80)
-      .serve.compile.drain.as(ExitCode.Success)
+  override def run(args: List[String]): IO[ExitCode] = {
+    val config: ApplicationConfig = ApplicationConfig(
+      executors = ExecutorsConfig(services = ExecutorsConfig.ServicesConfig(parallellism = 4)),
+      services = ServicesConfig(users = ServicesConfig.UsersConfig(failureProbability = 0.1, timeoutProbability = 0.1)),
+      server = ServerConfig(port = 80))
+    val server = Server.fromApplicationConfig.run(config)
+    server.server.serve.compile.drain.as(ExitCode.Success)
   }
 }
