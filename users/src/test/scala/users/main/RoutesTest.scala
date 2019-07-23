@@ -38,9 +38,9 @@ class RoutesTest {
     val signupResponse = routeFunction.run(signupRequest).unsafeRunSync()
     require(signupResponse.status == Status.Ok)
     
-    val id = signupResponse.as[User].unsafeRunSync().id
+    val id = signupResponse.as[User].unsafeRunSync().id.value
     val getUser = Request[IO](method = Method.GET, uri = Uri.fromString(s"/users/$id").right.get)
     val getUserResponse = routeFunction.run(getUser).unsafeRunSync()
-    require(getUserResponse.status == Status.Ok)
+    require(getUserResponse.status == Status.Ok, getUserResponse.as[String].unsafeRunSync())
   }
 }
