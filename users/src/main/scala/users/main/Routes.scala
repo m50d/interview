@@ -77,11 +77,11 @@ case class Routes(services: Services) {
     }
     GET / "users" |>> { asRoute(services.userManagement.all()) }
     GET / "users" / pathVar[User.Id] |>> { id: User.Id => asRoute(services.userManagement.get(id)) }
-    POST / "users" / pathVar[User.Id] / "updateEmail" ^ EntityDecoder.text[IO] |>> { (id: User.Id, email: String) =>
-      asRoute(services.userManagement.updateEmail(id, EmailAddress(email)))
+    POST / "users" / pathVar[User.Id] / "updateEmail" ^ jsonOf[IO, EmailAddress] |>> { (id: User.Id, email: EmailAddress) =>
+      asRoute(services.userManagement.updateEmail(id, email))
     }
-    POST / "users" / pathVar[User.Id] / "updatePassword" ^ EntityDecoder.text[IO] |>> { (id: User.Id, password: String) =>
-      asRoute(services.userManagement.updatePassword(id, Password(password)))
+    POST / "users" / pathVar[User.Id] / "updatePassword" ^ jsonOf[IO, Password] |>> { (id: User.Id, password: Password) =>
+      asRoute(services.userManagement.updatePassword(id, password))
     }
     POST / "users" / pathVar[User.Id] / "resetPassword" |>> { id: User.Id =>
       asRoute(services.userManagement.resetPassword(id))
