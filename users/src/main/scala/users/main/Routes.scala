@@ -18,6 +18,8 @@ import org.http4s.rho.bits.StringParser
 import org.http4s.rho.bits.ResultResponse
 import org.http4s.rho.bits.SuccessResponse
 import scala.reflect.runtime.universe.TypeTag
+import scala.concurrent.Future
+import users.services.usermanagement.Error
 
 object Routes {
   val reader: Reader[Services, Routes] =
@@ -37,10 +39,23 @@ case class Routes(services: Services) {
     override def typeTag = Some(implicitly[TypeTag[User.Id]])
   }
 
+  def f[A](fa: => Future[A]): IO[A] = IO.fromFuture(IO(fa))
+
   final val rhoRoutes = new RhoRoutes[IO] {
+
     GET / "generateId" |>>
-      { IO.fromFuture(IO(services.userManagement.generateId())) map { Ok(_) } }
-    GET / pathVar[User.Id] |>> { id: User.Id => Ok(()) }
+      { f(services.userManagement.generateId()) map { Ok(_) } }
+    GET / "get" / pathVar[User.Id] |>> { id: User.Id =>
+      f(services.userManagement.get(id)) map {
+        case Left(Error.Exists) => Conflict("Exists")
+        case Left(Error.NotFound) => NotFound("Not found")
+        case Left(Error.Active) => Locked("Active")
+        case Left(Error.Deleted) => Gone("Deleted")
+        case Left(Error.Blocked) => Forbidden("Blocked")
+        case Left(Error.System(t)) => InternalServerError(t.getStackTrace.mkString("\n"))
+        case Right(u) => Ok(())
+      }
+    }
     GET |>> Ok("Hello world")
   }
   final val middleware = io.createRhoMiddleware()
