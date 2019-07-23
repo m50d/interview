@@ -11,11 +11,11 @@ import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.syntax.all._
 import cats.effect.IO
 import cats.effect.ExitCode
+import org.apache.log4j.BasicConfigurator
 
 object Main extends IOApp {
 
   override def run(args: List[String]): IO[ExitCode] = {
-
     val config = ApplicationConfig(
       executors = ExecutorsConfig(
         services = ExecutorsConfig.ServicesConfig(
@@ -26,6 +26,8 @@ object Main extends IOApp {
           timeoutProbability = 0.1)))
 
     val application = Application.fromApplicationConfig.run(config)
+    
+    IO(BasicConfigurator.configure()) *>    
     BlazeServerBuilder[IO].withHttpApp(application.routes.orNotFound)
       .bindLocal(80)
       .serve.compile.drain.as(ExitCode.Success)

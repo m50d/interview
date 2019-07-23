@@ -98,5 +98,10 @@
 			<artifactId>http4s-blaze-server${scala.suffix}</artifactId>
 			<version>${http4s.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>1.7.22</version>
+		</dependency>
 	</dependencies>
 </project>
