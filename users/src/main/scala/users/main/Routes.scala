@@ -75,9 +75,25 @@ case class Routes(services: Services) {
     POST / "signUp" ^ jsonOf[IO, SignupRequest] |>> { body: SignupRequest =>
       asRoute(services.userManagement.signUp(body.userName, body.emailAddress, body.password))
     }
+    GET / "users" |>> { asRoute(services.userManagement.all()) }
     GET / "users" / pathVar[User.Id] |>> { id: User.Id => asRoute(services.userManagement.get(id)) }
     POST / "users" / pathVar[User.Id] / "updateEmail" ^ EntityDecoder.text[IO] |>> { (id: User.Id, email: String) =>
       asRoute(services.userManagement.updateEmail(id, EmailAddress(email)))
+    }
+    POST / "users" / pathVar[User.Id] / "updatePassword" ^ EntityDecoder.text[IO] |>> { (id: User.Id, password: String) =>
+      asRoute(services.userManagement.updatePassword(id, Password(password)))
+    }
+    POST / "users" / pathVar[User.Id] / "resetPassword" |>> { id: User.Id =>
+      asRoute(services.userManagement.resetPassword(id))
+    }
+    POST / "users" / pathVar[User.Id] / "block" |>> { id: User.Id =>
+      asRoute(services.userManagement.block(id))
+    }
+    POST / "users" / pathVar[User.Id] / "unblock" |>> { id: User.Id =>
+      asRoute(services.userManagement.unblock(id))
+    }
+    POST / "users" / pathVar[User.Id] / "delete" |>> { id: User.Id =>
+      asRoute(services.userManagement.delete(id))
     }
   }
   final val middleware = io.createRhoMiddleware()
