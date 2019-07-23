@@ -26,3 +26,4 @@ docs/src/main/tut/contributing.md
 .settings
 .cache*
 bin/
+dependency-reduced-pom.xml

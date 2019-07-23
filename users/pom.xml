@@ -10,6 +10,7 @@
     <version>0.1-SNAPSHOT</version>
     <properties>
         <http4s.version>0.20.1</http4s.version>
+        <main.class>users.Main</main.class>
         <scala.suffix>_2.12</scala.suffix>
     </properties>
     <repositories>
@@ -77,8 +78,28 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <mainClass>users.Main</mainClass>
+                    <mainClass>${main.class}</mainClass>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>${main.class}</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
