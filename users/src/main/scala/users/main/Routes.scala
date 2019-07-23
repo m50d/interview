@@ -23,6 +23,11 @@ import _root_.io.circe.syntax._
 import scala.reflect.runtime.universe.TypeTag
 import scala.concurrent.Future
 import users.services.usermanagement.Error
+import org.http4s.EntityDecoder
+import _root_.io.circe.Json
+import users.domain.UserName
+import users.domain.EmailAddress
+import users.domain.Password
 
 object Routes {
   val reader: Reader[Services, Routes] =
@@ -31,6 +36,11 @@ object Routes {
   val fromApplicationConfig: Reader[ApplicationConfig, Routes] =
     Services.fromApplicationConfig andThen reader
 }
+
+case class SignupRequest(
+  userName: UserName,
+  emailAddress: EmailAddress,
+  password: Option[Password])
 
 case class Routes(services: Services) {
   implicit def idEncoder[F[_]](implicit charset: Charset = DefaultCharset): EntityEncoder[F, User.Id] = {
@@ -45,7 +55,6 @@ case class Routes(services: Services) {
   def f[A](fa: => Future[A]): IO[A] = IO.fromFuture(IO(fa))
 
   final val rhoRoutes = new RhoRoutes[IO] {
-
     GET / "generateId" |>>
       { f(services.userManagement.generateId()) map { Ok(_) } }
     GET / "get" / pathVar[User.Id] |>> { id: User.Id =>
@@ -58,6 +67,10 @@ case class Routes(services: Services) {
         case Left(Error.System(t)) => InternalServerError(t.getStackTrace.mkString("\n"))
         case Right(u) => Ok(u.asJson)
       }
+    }
+    POST / "signUp" ^ jsonOf[IO, SignupRequest] |>> {
+      body: SignupRequest =>
+        f(services.userManagement.signUp(body.userName, body.emailAddress, body.password)) map { _ => Ok(()) }
     }
     GET |>> Ok("Hello world")
   }
