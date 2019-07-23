@@ -18,5 +18,6 @@ resolvers +=
 libraryDependencies ++= Seq(
   "com.softwaremill.quicklens" %% "quicklens" % "1.4.11",
   "org.typelevel"              %% "cats-core" % "1.0.0-MF",
+  "org.http4s" %% "rho-swagger" % "0.19.0",
   compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.4")
 )
