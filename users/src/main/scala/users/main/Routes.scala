@@ -17,6 +17,9 @@ import fs2.Chunk
 import org.http4s.rho.bits.StringParser
 import org.http4s.rho.bits.ResultResponse
 import org.http4s.rho.bits.SuccessResponse
+import org.http4s.circe._
+import _root_.io.circe.generic.auto._
+import _root_.io.circe.syntax._
 import scala.reflect.runtime.universe.TypeTag
 import scala.concurrent.Future
 import users.services.usermanagement.Error
@@ -53,7 +56,7 @@ case class Routes(services: Services) {
         case Left(Error.Deleted) => Gone("Deleted")
         case Left(Error.Blocked) => Forbidden("Blocked")
         case Left(Error.System(t)) => InternalServerError(t.getStackTrace.mkString("\n"))
-        case Right(u) => Ok(())
+        case Right(u) => Ok(u.asJson)
       }
     }
     GET |>> Ok("Hello world")
