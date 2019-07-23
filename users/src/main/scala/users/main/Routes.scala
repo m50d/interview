@@ -1,7 +1,6 @@
 package users.main
 
 import cats.data._
-import org.http4s.RhoDsl._
 import users.config._
 import org.http4s.rho.RhoRoutes
 import cats.Monad
@@ -15,7 +14,6 @@ import org.http4s.MediaType
 import org.http4s.headers.`Content-Type`
 import fs2.Chunk
 import org.http4s.rho.bits.StringParser
-import org.http4s.rho.bits.ResultResponse
 import org.http4s.rho.bits.SuccessResponse
 import org.http4s.circe._
 import _root_.io.circe.generic.auto._
@@ -23,8 +21,6 @@ import _root_.io.circe.syntax._
 import scala.reflect.runtime.universe.TypeTag
 import scala.concurrent.Future
 import users.services.usermanagement.Error
-import org.http4s.EntityDecoder
-import _root_.io.circe.Json
 import users.domain.UserName
 import users.domain.EmailAddress
 import users.domain.Password

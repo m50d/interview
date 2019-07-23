@@ -8,7 +8,6 @@ import cats.data.Reader
 import users.config.ApplicationConfig
 import cats.effect.ConcurrentEffect
 import cats.effect.Timer
-import cats.effect.ContextShift
 
 object Server {
   val reader: Reader[(ServerConfig, Routes), Server] =

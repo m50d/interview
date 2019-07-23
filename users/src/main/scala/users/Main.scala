@@ -1,13 +1,10 @@
 package users
 
-import cats.data._
 import cats.implicits._
 
 import users.config._
-import users.main._
 import cats.effect.IOApp
 
-import org.http4s.server.blaze.BlazeServerBuilder
 import cats.effect.IO
 import cats.effect.ExitCode
 import org.apache.log4j.BasicConfigurator
@@ -25,7 +22,7 @@ object Main extends IOApp {
     val config: ApplicationConfig = ApplicationConfig(
       executors = ExecutorsConfig(services = ExecutorsConfig.ServicesConfig(parallellism = 4)),
       services = ServicesConfig(users = ServicesConfig.UsersConfig(failureProbability = 0.1, timeoutProbability = 0.1)),
-      server = ServerConfig(port = 80))
+      server = ServerConfig(port = 8080))
     val server = Server.fromApplicationConfig.run(config)
     server.server.serve.compile.drain.as(ExitCode.Success)
   }
