@@ -5,7 +5,8 @@ import org.http4s.RhoDsl._
 import users.config._
 import org.http4s.rho.RhoRoutes
 import cats.Monad
-
+import cats.effect.IO
+import org.http4s.rho.swagger.syntax.io
 
 object Application {
   val reader: Reader[Services, Application] =
@@ -16,11 +17,10 @@ object Application {
 }
 
 case class Application(
-    services: Services
-) {
-  final def restRoutes[F[_]: Monad] = new RhoRoutes[F] {
-    GET / "somePath" / pathVar[Int]("someInt", "parameter description") +? paramD[String]("name", "parameter description") |>> {
-      (someInt: Int, name: String) => Ok("result")
-    }
-} 
+  services: Services) {
+  final val rhoRoutes = new RhoRoutes[IO] {
+    GET |>> Ok("Hello world")
+  }
+  final val middleware = io.createRhoMiddleware()
+  final val routes = rhoRoutes.toRoutes(middleware)
 }

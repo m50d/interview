@@ -9,6 +9,7 @@
 	<packaging>jar</packaging>
 	<version>0.1-SNAPSHOT</version>
 	<properties>
+		<http4s.version>0.20.1</http4s.version>
 		<scala.suffix>_2.12</scala.suffix>
 	</properties>
 	<repositories>
@@ -90,7 +91,12 @@
 		<dependency>
 			<groupId>org.http4s</groupId>
 			<artifactId>http4s-server${scala.suffix}</artifactId>
-			<version>0.20.1</version>
+			<version>${http4s.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.http4s</groupId>
+			<artifactId>http4s-blaze-server${scala.suffix}</artifactId>
+			<version>${http4s.version}</version>
 		</dependency>
 	</dependencies>
 </project>
