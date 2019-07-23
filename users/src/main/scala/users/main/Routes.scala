@@ -45,6 +45,8 @@ case class SignupRequest(
   password: Option[Password])
 
 trait UserResponseGenerator extends ResponseGeneratorInstances[IO] {
+  def fromFuture[A](fa: => Future[A]): IO[A] = IO.fromFuture(IO(fa))
+
   def toResponse[A: Encoder](er: Either[Error, A]) = er match {
     case Left(Error.Exists) => Conflict("Exists")
     case Left(Error.NotFound) => NotFound("Not found")
@@ -54,6 +56,8 @@ trait UserResponseGenerator extends ResponseGeneratorInstances[IO] {
     case Left(Error.System(t)) => InternalServerError(t.getStackTrace.mkString("\n"))
     case Right(a) => Ok(a.asJson)
   }
+
+  def asRoute[A: Encoder](fa: => Future[Either[Error, A]]) = fromFuture(fa) map { toResponse(_) }
 }
 
 case class Routes(services: Services) {
@@ -66,22 +70,15 @@ case class Routes(services: Services) {
     override def typeTag = Some(implicitly[TypeTag[User.Id]])
   }
 
-  def f[A](fa: => Future[A]): IO[A] = IO.fromFuture(IO(fa))
-
   final val rhoRoutes = new RhoRoutes[IO] with UserResponseGenerator {
-    GET / "generateId" |>>
-      { f(services.userManagement.generateId()) map { Ok(_) } }
-    POST / "signUp" ^ jsonOf[IO, SignupRequest] |>> {
-      body: SignupRequest =>
-        f(services.userManagement.signUp(body.userName, body.emailAddress, body.password)) map { toResponse(_) }
+    GET / "generateId" |>> { fromFuture(services.userManagement.generateId()) }
+    POST / "signUp" ^ jsonOf[IO, SignupRequest] |>> { body: SignupRequest =>
+      asRoute(services.userManagement.signUp(body.userName, body.emailAddress, body.password))
     }
-    GET / "users" / pathVar[User.Id] |>> { id: User.Id =>
-      f(services.userManagement.get(id)) map { toResponse(_) }
+    GET / "users" / pathVar[User.Id] |>> { id: User.Id => asRoute(services.userManagement.get(id)) }
+    POST / "users" / pathVar[User.Id] / "updateEmail" ^ EntityDecoder.text[IO] |>> { (id: User.Id, email: String) =>
+      asRoute(services.userManagement.updateEmail(id, EmailAddress(email)))
     }
-    POST / "users" / pathVar[User.Id] / "updateEmail" ^ EntityDecoder.text[IO] |>> { (id: User.Id, email: String) => 
-      f(services.userManagement.updateEmail(id, EmailAddress(email)))  map { toResponse(_) }
-    }
-    GET |>> Ok("Hello world")
   }
   final val middleware = io.createRhoMiddleware()
   final val routes = rhoRoutes.toRoutes(middleware)
