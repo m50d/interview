@@ -71,12 +71,15 @@ case class Routes(services: Services) {
   final val rhoRoutes = new RhoRoutes[IO] with UserResponseGenerator {
     GET / "generateId" |>>
       { f(services.userManagement.generateId()) map { Ok(_) } }
-    GET / "get" / pathVar[User.Id] |>> { id: User.Id =>
-      f(services.userManagement.get(id)) map { toResponse(_) }
-    }
     POST / "signUp" ^ jsonOf[IO, SignupRequest] |>> {
       body: SignupRequest =>
         f(services.userManagement.signUp(body.userName, body.emailAddress, body.password)) map { toResponse(_) }
+    }
+    GET / "users" / pathVar[User.Id] |>> { id: User.Id =>
+      f(services.userManagement.get(id)) map { toResponse(_) }
+    }
+    POST / "users" / pathVar[User.Id] / "updateEmail" ^ EntityDecoder.text[IO] |>> { (id: User.Id, email: String) => 
+      f(services.userManagement.updateEmail(id, EmailAddress(email)))  map { toResponse(_) }
     }
     GET |>> Ok("Hello world")
   }

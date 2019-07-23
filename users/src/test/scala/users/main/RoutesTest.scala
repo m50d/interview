@@ -25,7 +25,9 @@ class RoutesTest {
       server = ServerConfig(port = 80))
     val routes = Routes.fromApplicationConfig.run(config)
     val routeFunction = routes.routes.orNotFound
+    
     val requestContent = SignupRequest(UserName("testUser"), EmailAddress("testEmail"), None)
+    println(requestContent.asJson)
     val request = Request[IO](method = Method.POST, uri = Uri.uri("/signUp") ).withEntity(requestContent.asJson)
     val response = routeFunction.run(request).unsafeRunSync()
     
